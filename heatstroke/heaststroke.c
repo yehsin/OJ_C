@@ -36,45 +36,58 @@ void insert(Node**now,int x){
 }
 
 void build_tree(Node **now, int *arr, int l, int r){
-    *now=(Node*) malloc(sizeof(Node));
-    *now=creatRoot(*now,arr[l]);
-    while(l<r){
-        l++;
-        insert(&(*now),arr[l]);
+    if(l>r) {
+        return;
+    }
+    (*now)=(Node*)malloc(sizeof(Node));
+    if(l==r){
+        (*now)->level=arr[l];
+        (*now)->left_child=(*now)->right_child=NULL;
+    }
+    else{
+        int mid=(l+r)/2;
+        (*now)->level=arr[mid];
+        (*now)->left_child=(*now)->right_child=NULL;
+        build_tree(&((*now)->left_child),arr,l,mid-1);
+        build_tree(&((*now)->right_child),arr,mid+1,r);
     }
 }
 
 
-/*void inorder(Node *A){
+void inorder(Node *A){
     if (A != NULL) {
         inorder(A->left_child);
-        printf("%d ", A->level);
+        printf("3%d ", A->level);
         inorder(A->right_child);
-    }
-}*/
 
-int query_heatstroke(Node *now, int x){
-    while(x!=now->level){
-        if(x<now->level){
-            if(now->left_child!=NULL){
-                now=now->left_child;
-            }
-            else{
-                return 0;
-            }
-        }
-        else{
-            if(now->right_child!=NULL){
-                now=now->right_child;
-            }
-            else{
-                return 0;
-            }
-        }
     }
 }
 
-void replace_r(Node *Root,Node *pre,Node **root){ 
+int query_heatstroke(Node *now, int x){
+    if(x>now->level){
+        if(now->right_child){
+            query_heatstroke(now->right_child,x);
+        }
+        else{
+            return 0;
+        }
+    }
+    else if(x<now->level){
+        if(now->left_child){
+            query_heatstroke(now->left_child,x);
+        }
+        else{
+            return 0;
+        }
+        
+    }
+    else if(x==now->level){
+        return 1;
+    }
+    
+}
+
+/*void replace_r(Node *Root,Node *pre,Node **root){ 
     Node * prev=Root;
     if((Root->left_child)->right_child==NULL){
         if(pre->right_child==Root){
@@ -99,7 +112,7 @@ void replace_r(Node *Root,Node *pre,Node **root){
         free(Root);
 
     }
-}
+}*/
 
 void eat_rat(Node **root, int x){
     Node *Root=*root; //explore next node
@@ -114,14 +127,17 @@ void eat_rat(Node **root, int x){
             Root=Root->right_child;
         }
     }
+    //找到x了
+    
     if(Root->left_child!=NULL && Root->right_child!=NULL){ //we choose to take biggest from left tree.
-        if(x!=(*root)->level){
-            replace_r(Root,pre,&(*root));
+        Node *small=Root->left_child;
+        int val;
+        while(small->right_child){
+            small=small->right_child;
+            val=small->level;
         }
-        else{ //find the biggest one from left tree to replace x node.
-            Root=Root->left_child;
-            replace_r(Root,pre,&(*root));
-        }
+        eat_rat(&(Root->left_child),val);
+        Root->level=val;
     }
     else if(Root->left_child==NULL && Root->right_child!=NULL){
         if(x!=(*root)->level){ //Node deleted is root Node.
@@ -176,7 +192,11 @@ void eat_rat(Node **root, int x){
         
     }
     else if(Root->right_child==NULL && Root->left_child==NULL){ //leaf Node
-        if(pre->left_child==Root){
+        if(Root==*root){
+            (*root)=NULL;
+            free(Root);
+        }
+        else if(pre->left_child==Root){
             free(pre->left_child);
             pre->left_child=NULL;
             Root=NULL;
